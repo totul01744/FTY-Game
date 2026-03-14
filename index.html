@@ -7,7 +7,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Hind+Siliguri:wght@400;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <script>
 function loadScript(src){return new Promise(r=>{const s=document.createElement('script');s.src=src;s.onload=()=>r(true);s.onerror=()=>r(false);document.head.appendChild(s);})}
-window._fbReady=(async()=>{const a=await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');if(!a)return false;return await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js');})();
+window._fbReady=(async()=>{
+  const a=await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');if(!a)return false;
+  const b=await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js');if(!b)return false;
+  return await loadScript('https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js');
+})();
 </script>
 <style>
 :root{--bg:#07080f;--bg2:#0e1020;--bg3:#151829;--bg4:#1c2038;--gold:#f5c518;--red:#ff4d6d;--blue:#4cc9f0;--green:#06d6a0;--purple:#a855f7;--orange:#fb923c;--text:#f0f2ff;--text2:#8892b0;--brd:rgba(245,197,24,.12);--brd2:rgba(255,255,255,.06);--r:13px}
@@ -286,6 +290,8 @@ tr:hover td{background:rgba(245,197,24,.02)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(245,197,24,.2);border-radius:2px}
+#loginPg.on{display:flex!important}
+
 </style>
 </head>
 <body>
@@ -615,11 +621,66 @@ function detectUID(){
 // ================================================================
 // INIT
 // ================================================================
+
+async function googleLogin(){
+  if(typeof firebase==='undefined'||!firebase.auth){
+    document.getElementById('lerr').style.display='block';
+    document.getElementById('lerr').textContent='Firebase লোড হয়নি। Page refresh করুন।';
+    return;
+  }
+  const btn=document.getElementById('gbtn'),lerr=document.getElementById('lerr');
+  lerr.style.display='none';btn.disabled=true;btn.textContent='⏳ লোড হচ্ছে...';
+  try{
+    const provider=new firebase.auth.GoogleAuthProvider();
+    provider.addScope('email');
+    provider.setCustomParameters({prompt:'select_account'});
+    await firebase.auth().signInWithPopup(provider);
+  }catch(e){
+    console.error('Login:',e.code,e.message);
+    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'){
+      try{await firebase.auth().signInWithRedirect(new firebase.auth.GoogleAuthProvider());return;}catch(e2){}
+    }
+    const msgs={'auth/unauthorized-domain':'❌ Domain add করুন: '+location.hostname,'auth/operation-not-allowed':'❌ Google Sign-in enable করুন।'};
+    lerr.style.display='block';lerr.textContent=msgs[e.code]||('❌ '+e.code+': '+e.message);
+    btn.disabled=false;btn.textContent='Google দিয়ে লগিন করুন';
+  }
+}
+
 async function init(){
-  const kill=setTimeout(()=>{document.getElementById('ls').style.display='none';rNav();go('home');},6000);
+  const kill=setTimeout(()=>{
+    // Timeout - show login if no uid, else show home
+    document.getElementById('ls').style.display='none';
+    if(FYP.uid){rNav();go('home');}
+    else{document.getElementById('loginPg').classList.add('on');}
+  },6000);
   try{
     const ok=await Promise.race([fb._init(),new Promise(r=>setTimeout(()=>r(false),3500))]);
     USE_FB=!!ok;
+    // Google Auth listener
+    if(USE_FB && firebase.auth){
+      firebase.auth().onAuthStateChanged(async user=>{
+        clearTimeout(kill);
+        if(user){
+          FYP.uid=user.uid;
+          let prof=await db.get('players/'+user.uid);
+          if(!prof){prof={uid:user.uid,name:user.displayName||'Player_'+user.uid.slice(-5),email:user.email||'',photo:user.photoURL||'',joinedAt:Date.now(),wins:0,phone:'',game:'',gameUID:''};await db.set('players/'+user.uid,prof);}
+          else{const u={};if(user.displayName&&prof.name!==user.displayName)u.name=user.displayName;if(user.photoURL&&prof.photo!==user.photoURL)u.photo=user.photoURL;if(Object.keys(u).length){await db.update('players/'+user.uid,u);prof={...prof,...u};}}
+          FYP.profile=prof;
+          FYP.isAdmin=ADMIN_UIDS.includes(user.uid)||!!(await db.get('admins/'+user.uid));
+          // Start live listeners
+          for(const p of ['games','tournaments','players','matches','results','schedules','payments','screenshots','notifications','paySettings'])
+            db.on(p,v=>{FYP[p]=v||{};rfx();updateNotifBadge();});
+          document.getElementById('ls').style.display='none';
+          document.getElementById('loginPg').classList.remove('on');
+          rNav();go('home');
+        } else {
+          document.getElementById('ls').style.display='none';
+          document.getElementById('loginPg').classList.add('on');
+          document.getElementById('loginPg').style.display='flex';
+        }
+      });
+      return; // auth listener will handle the rest
+    }
     FYP.uid=detectUID();
     if(FYP.uid){
       let prof=await db.get('players/'+FYP.uid);
