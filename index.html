@@ -439,7 +439,7 @@ tr:hover td{background:rgba(245,197,24,.02)}
 'use strict';
 // ══ CONFIG ══
 const FC={apiKey:"AIzaSyCr2G8jyk_XfWgn7TSjBw3br3b9J1xWRH8",authDomain:"earning-bot-31c7d.firebaseapp.com",databaseURL:"https://earning-bot-31c7d-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"earning-bot-31c7d",storageBucket:"earning-bot-31c7d.firebasestorage.app",messagingSenderId:"396666924900",appId:"1:396666924900:web:77a22669bd6c3e3ce6d471"};
-const ADMIN_UIDS=['an63irNn0sTmcvr1ytrZJTa05zw2'];
+const ADMIN_UIDS=['ckbTWLsCHffd9r102NmXaooSvbi2'];
 
 // ══ FIREBASE INIT ══
 if(!firebase.apps.length) firebase.initializeApp(FC);
@@ -487,19 +487,43 @@ async function googleLogin(){
 async function doLogout(){await auth.signOut();location.reload();}
 
 // ══ AUTH STATE ══
+// ══ URL থেকে UID নিয়ে auto-login (FYP King থেকে আসলে) ══
+async function loadAppByUID(uid){
+  document.getElementById('loginPg').classList.remove('on');
+  FYP.uid=uid;
+  try{
+    let prof=await DB.get('players/'+uid);
+    if(!prof){prof={uid,name:'Player_'+uid.slice(-5),joinedAt:Date.now(),wins:0,phone:'',game:'',gameUID:''};await DB.set('players/'+uid,prof);}
+    FYP.profile=prof;
+    FYP.isAdmin=ADMIN_UIDS.includes(uid)||!!(await DB.get('admins/'+uid));
+  }catch(e){console.warn('profile:',e);}
+  DB.get('games').then(async eg=>{if(!eg){for(const g of [{name:'Ludo King',icon:'🎲',type:'বোর্ড গেম'},{name:'PUBG Mobile',icon:'🔫',type:'Battle Royale'},{name:'Free Fire',icon:'🔥',type:'Battle Royale'},{name:'Chess',icon:'♟️',type:'বোর্ড গেম'},{name:'FIFA',icon:'⚽',type:'স্পোর্টস'},{name:'Call of Duty',icon:'💥',type:'FPS'},{name:'Clash Royale',icon:'👑',type:'কার্ড গেম'}])await DB.push('games',g);}}).catch(()=>{});
+  for(const p of ['games','tournaments','players','matches','results','schedules','payments','screenshots','notifications','paySettings'])
+    DB.on(p,v=>{FYP[p]=v||{};rfx();updateNDot();});
+  document.getElementById('ls').style.display='none';
+  rNav();go('home');
+}
+
 auth.onAuthStateChanged(async user=>{
   clearTimeout(_kill);
   if(!user){
     // Check redirect result
     try{const r=await Promise.race([auth.getRedirectResult(),new Promise((_,rj)=>setTimeout(()=>rj(new Error('t')),3000))]);if(r&&r.user)return;}catch(e){if(e.message!=='t')console.warn(e.code);}
+    // ✅ URL এ UID আছে? FYP King থেকে এসেছে — Google login লাগবে না
+    const _up=new URLSearchParams(window.location.search);
+    const _uid=_up.get('uid')||_up.get('tguid')||_up.get('tg_uid');
+    if(_uid){
+      console.log('Auto-login via URL UID:', _uid);
+      await loadAppByUID(_uid);
+      return;
+    }
     document.getElementById('ls').style.display='none';
     document.getElementById('loginPg').classList.add('on');
     return;
   }
-  // Logged in
+  // Google login সফল
   document.getElementById('loginPg').classList.remove('on');
   FYP.uid=user.uid;
-  // Load profile
   try{
     let prof=await DB.get('players/'+user.uid);
     if(!prof){prof={uid:user.uid,name:user.displayName||'Player_'+user.uid.slice(-5),email:user.email||'',photo:user.photoURL||'',joinedAt:Date.now(),wins:0,phone:'',game:'',gameUID:''};await DB.set('players/'+user.uid,prof);}
@@ -507,12 +531,9 @@ auth.onAuthStateChanged(async user=>{
     FYP.profile=prof;
     FYP.isAdmin=ADMIN_UIDS.includes(user.uid)||!!(await DB.get('admins/'+user.uid));
   }catch(e){console.warn('profile load:',e);}
-  // Seed games
   DB.get('games').then(async eg=>{if(!eg){for(const g of [{name:'Ludo King',icon:'🎲',type:'বোর্ড গেম'},{name:'PUBG Mobile',icon:'🔫',type:'Battle Royale'},{name:'Free Fire',icon:'🔥',type:'Battle Royale'},{name:'Chess',icon:'♟️',type:'বোর্ড গেম'},{name:'FIFA',icon:'⚽',type:'স্পোর্টস'},{name:'Call of Duty',icon:'💥',type:'FPS'},{name:'Clash Royale',icon:'👑',type:'কার্ড গেম'}])await DB.push('games',g);}}).catch(()=>{});
-  // Live listeners
   for(const p of ['games','tournaments','players','matches','results','schedules','payments','screenshots','notifications','paySettings'])
     DB.on(p,v=>{FYP[p]=v||{};rfx();updateNDot();});
-  // Show app
   document.getElementById('ls').style.display='none';
   rNav();go('home');
 });
