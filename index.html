@@ -528,6 +528,8 @@ select.fi2 option{background:var(--bg2);}
 .det-hdr{display:flex;align-items:center;gap:11px;
   padding:12px 14px;border-bottom:1px solid var(--border);position:sticky;top:56px;
   background:var(--bg);z-index:10;}
+.page-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.page-hdr-title{font-family:var(--fd);font-size:18px;font-weight:800;}
 .back-b{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);
   background:var(--card);display:flex;align-items:center;justify-content:center;
   cursor:pointer;font-size:17px;flex-shrink:0;transition:.2s;}
@@ -793,7 +795,7 @@ async function sendSupportMsg(){
     await loadSupportMsgs();
   } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
 }
-$('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMov'))$('supportMov').classList.remove('on');});
+
 
 /* ══ PAYMENT MODAL ══ */
 .pay-opt{display:flex;align-items:center;gap:12px;padding:12px;
@@ -854,31 +856,6 @@ $('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMo
 </div>
 
 <!-- ══════════ PAYMENT MODAL ══════════ -->
-
-<!-- ══ NOTICE MODAL ══ -->
-<div class="mov" id="noticeMov">
-  <div class="mov-card" style="max-height:82vh;overflow-y:auto;">
-    <div class="mov-title">📢 নোটিশ ও উপহার</div>
-    <div id="noticeList" style="margin-top:12px;min-height:60px;"></div>
-    <button class="btn-s" onclick="$('noticeMov').classList.remove('on')" style="width:100%;margin-top:12px;">✅ বন্ধ করো</button>
-  </div>
-</div>
-
-<!-- ══ SUPPORT MODAL ══ -->
-<div class="mov" id="supportMov">
-  <div class="mov-card" style="max-height:85vh;display:flex;flex-direction:column;">
-    <div class="mov-title">💬 সাপোর্ট</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Admin কে প্রশ্ন করো বা সমস্যা জানাও</div>
-    <div id="supportMsgs" style="flex:1;overflow-y:auto;margin-bottom:10px;min-height:80px;"></div>
-    <div style="border-top:1px solid var(--border);padding-top:10px;">
-      <textarea class="fi2" id="supportTxt" placeholder="তোমার প্রশ্ন বা সমস্যা লেখো..." style="resize:none;height:70px;margin-bottom:8px;width:100%;"></textarea>
-      <div style="display:flex;gap:8px;">
-        <button class="btn-p" onclick="sendSupportMsg()" style="flex:1;">📤 পাঠাও</button>
-        <button class="btn-s" onclick="$('supportMov').classList.remove('on')">বন্ধ</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div class="mov" id="payMov">
 <div class="mbox">
@@ -1095,6 +1072,37 @@ $('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMo
     <div class="det-body" id="detBody"></div>
   </div>
 
+
+  <!-- ─── NOTICE PAGE ─── -->
+  <div class="page" id="pg-notice">
+    <div class="page-hdr">
+      <button class="back-b" onclick="showPage('home')">←</button>
+      <div class="page-hdr-title">📢 নোটিশ ও উপহার</div>
+    </div>
+    <div id="noticePageList" style="margin-top:8px;">
+      <div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড হচ্ছে...</div>
+    </div>
+  </div>
+
+
+  <!-- ─── SUPPORT PAGE ─── -->
+  <div class="page" id="pg-support">
+    <div class="page-hdr">
+      <button class="back-b" onclick="showPage('home')">←</button>
+      <div class="page-hdr-title">💬 সাপোর্ট</div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Admin কে প্রশ্ন করো বা সমস্যা জানাও — Admin reply করবে</div>
+
+    <!-- Chat messages -->
+    <div id="supportPageMsgs" style="min-height:200px;margin-bottom:16px;"></div>
+
+    <!-- Send message -->
+    <div style="background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border);">
+      <textarea class="fi2" id="supportPageTxt" placeholder="তোমার প্রশ্ন বা সমস্যা লেখো..." style="resize:none;height:80px;margin-bottom:10px;width:100%;"></textarea>
+      <button class="btn-p" onclick="sendSupportPageMsg()" style="width:100%;">📤 পাঠাও</button>
+    </div>
+  </div>
+
   <!-- ─── LEADERBOARD ─── -->
   <!-- ─── EARNING PAGE ─── -->
   <div class="page" id="pg-earning">
@@ -1200,7 +1208,7 @@ $('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMo
     <button class="ni" id="ni-profile" onclick="showPage('profile')"><span class="ni-ic">👤</span><span class="ni-lb">প্রোফাইল</span></button>
     <button class="ni" id="ni-leaderboard" onclick="showPage('leaderboard')"><span class="ni-ic">🏆</span><span class="ni-lb">র‍্যাংকিং</span></button>
     <button class="ni" id="ni-earning" onclick="showPage('earning')"><span class="ni-ic">💰</span><span class="ni-lb">Earning</span></button>
-    <button class="ni" id="ni-support" onclick="openSupport()"><span class="ni-ic">💬</span><span class="ni-lb">সাপোর্ট</span></button>
+    <button class="ni" id="ni-support" onclick="showPage('support')"><span class="ni-ic">💬</span><span class="ni-lb">সাপোর্ট</span></button>
   </div>
 
 </div><!-- /appScreen -->
@@ -1281,6 +1289,89 @@ function getErrMsg(e){
 }
 
 /* ══ INIT ══ */
+/* ══ NOTICE PAGE ══ */
+async function loadNoticePage(){
+  const list = document.getElementById('noticePageList');
+  if(!list) return;
+  list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড হচ্ছে...</div>';
+  try{
+    const d = await window._getSetting('notices');
+    const notices = (d && d.list) || [];
+    if(!notices.length){
+      list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:60px 20px;">📭<br><br>এখন কোনো নোটিশ নেই</div>';
+      return;
+    }
+    list.innerHTML = notices.map(n => `
+      <div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <span style="font-size:26px;">${n.icon||'📢'}</span>
+          <div style="font-family:var(--fd);font-size:17px;font-weight:800;">${n.title||''}</div>
+        </div>
+        ${n.body ? `<div style="font-size:13px;line-height:1.8;margin-bottom:12px;color:var(--text);">${n.body}</div>` : ''}
+        ${n.link ? `<a href="${n.link}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--blue);color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:8px;">🔗 ${n.linkText||'লিঙ্কে যাও'}</a>` : ''}
+        ${n.fileUrl ? `<a href="${n.fileUrl}" download target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--green),#00a849);color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;">⬇️ ${n.fileName||'ডাউনলোড করো'}</a>` : ''}
+        ${n.date ? `<div style="font-size:11px;color:var(--muted);margin-top:8px;">${n.date}</div>` : ''}
+      </div>`).join('');
+  } catch(e){
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড করতে পারিনি</div>';
+  }
+}
+
+/* ══ SUPPORT PAGE ══ */
+async function loadSupportPage(){
+  await loadSupportPageMsgs();
+}
+async function loadSupportPageMsgs(){
+  const uid = window._uid;
+  const msgDiv = document.getElementById('supportPageMsgs');
+  if(!uid || !msgDiv) return;
+  msgDiv.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">লোড হচ্ছে...</div>';
+  try{
+    const d = await window._getSetting('support_' + uid);
+    const msgs = (d && d.msgs) || [];
+    if(!msgs.length){
+      msgDiv.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px 20px;">💬<br><br>এখনো কোনো বার্তা নেই।<br>নিচে লিখে পাঠাও!</div>';
+      return;
+    }
+    msgDiv.innerHTML = msgs.map(m => `
+      <div style="margin-bottom:12px;display:flex;flex-direction:column;align-items:${m.from==='user'?'flex-end':'flex-start'};">
+        <div style="max-width:82%;background:${m.from==='user'?'var(--p)':'var(--card)'};color:${m.from==='user'?'#fff':'var(--text)'};border-radius:${m.from==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px'};padding:10px 14px;font-size:13px;line-height:1.65;border:${m.from==='user'?'none':'1px solid var(--border)'};">${m.text}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">${m.from==='user'?'তুমি':'👑 Admin'} • ${m.time||''}</div>
+      </div>`).join('');
+    msgDiv.scrollTop = msgDiv.scrollHeight;
+  } catch(e){
+    msgDiv.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">লোড হয়নি</div>';
+  }
+}
+async function sendSupportPageMsg(){
+  const txtEl = document.getElementById('supportPageTxt');
+  const txt = txtEl ? txtEl.value.trim() : '';
+  if(!txt){ toast('কিছু লেখো!','er'); return; }
+  const uid = window._uid;
+  if(!uid){ toast('আগে লগইন করো','er'); return; }
+  load('পাঠানো হচ্ছে...');
+  try{
+    const d = await window._getSetting('support_' + uid);
+    const msgs = (d && d.msgs) || [];
+    msgs.push({
+      from:'user', text:txt,
+      time: new Date().toLocaleString('bn-BD'),
+      uid:uid, email:window._uEmail||'',
+      name:(window._uData && window._uData.name)||''
+    });
+    await window._saveSetting('support_'+uid, {
+      msgs:msgs, uid:uid,
+      email:window._uEmail||'',
+      name:(window._uData && window._uData.name)||'',
+      lastMsg:txt, lastTime:new Date().toISOString(), replied:false
+    });
+    if(txtEl) txtEl.value = '';
+    unload();
+    toast('✅ বার্তা পাঠানো হয়েছে!','ok');
+    await loadSupportPageMsgs();
+  } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
+}
+
 window.initApp = async () => {
   loadEarningLinks();
   load('ডেটা লোড হচ্ছে...');
@@ -1323,6 +1414,8 @@ function showPage(p){
   if(p==='profile'){ renderProfile(); }
   if(p==='script'){ renderTypeGrid(); }
   if(p==='earning'){ loadEarningLinks(); }
+  if(p==='notice'){ loadNoticePage(); }
+  if(p==='support'){ loadSupportPage(); }
   window.scrollTo(0,0);
 }
 
@@ -2030,10 +2123,8 @@ function changeAdmPass(){
 
 
 /* ══ SUPPORT ══ */
-async function openSupport(){
-  $('supportMov').classList.add('on');
-  await loadSupportMsgs();
-}
+function openSupport(){ showPage('support'); }
+
 async function loadSupportMsgs(){
   const uid=window._uid; if(!uid) return;
   $('supportMsgs').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px;">লোড হচ্ছে...</div>';
@@ -2077,17 +2168,8 @@ async function sendSupportMsg(){
 
 /* ══ NOTICES ══ */
 var noticesCache = [];
-async function openNotices(){
-  $('noticeMov').classList.add('on');
-  $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">লোড হচ্ছে...</div>';
-  try{
-    const d = await window._getSetting('notices');
-    noticesCache = d?.list || [];
-    renderNotices();
-  } catch(e){
-    $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px;">কোনো নোটিশ নেই</div>';
-  }
-}
+function openNotices(){ showPage('notice'); }
+
 function renderNotices(){
   if(!noticesCache.length){
     $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">এখন কোনো নোটিশ নেই</div>';
@@ -2105,7 +2187,7 @@ function renderNotices(){
       <div style="font-size:10px;color:var(--muted);margin-top:6px;">${n.date||''}</div>
     </div>`).join('');
 }
-$('noticeMov')?.addEventListener('click', function(e){ if(e.target===$('noticeMov')) $('noticeMov').classList.remove('on'); });
+
 
 /* ══ PAYMENT MODAL ══ */
 function openPayMov(){ $('payMov').classList.add('on'); }
