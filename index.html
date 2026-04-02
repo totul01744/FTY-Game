@@ -1079,6 +1079,7 @@ async function sendSupportMsg(){
       <button class="back-b" onclick="showPage('home')">←</button>
       <div class="page-hdr-title">📢 নোটিশ ও উপহার</div>
     </div>
+    <a href="https://fty-notice-board.vercel.app/" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#FF9500,#FF6B00);color:#fff;padding:12px;border-radius:12px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:14px;">📋 Notice Board খোলো →</a>
     <div id="noticePageList" style="margin-top:8px;">
       <div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড হচ্ছে...</div>
     </div>
@@ -1296,7 +1297,12 @@ async function loadNoticePage(){
   list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড হচ্ছে...</div>';
   try{
     const d = await window._getSetting('notices');
-    const notices = (d && d.list) || [];
+    let notices = [];
+    if(d && d.list){
+      try{ notices = typeof d.list==='string' ? JSON.parse(d.list) : d.list; }
+      catch(e){ notices=[]; }
+    }
+    if(!Array.isArray(notices)) notices=[];
     if(!notices.length){
       list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:60px 20px;">📭<br><br>এখন কোনো নোটিশ নেই</div>';
       return;
