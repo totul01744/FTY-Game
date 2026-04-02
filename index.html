@@ -272,8 +272,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mov-title{font-family:var(--fd);font-size:19px;font-weight:800;margin-bottom:14px;}
 
 /* ══ AUTH SCREEN ══ */
-#authScreen{display:none;position:fixed;inset:0;z-index:800;background:var(--bg);
-  align-items:center;justify-content:center;padding:20px;}
+#authScreen{position:fixed;inset:0;z-index:800;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:20px;}
 .auth-wrap{width:100%;max-width:400px;}
 .auth-brand{text-align:center;margin-bottom:28px;}
 .auth-crown{font-size:54px;display:block;animation:bob 3s ease-in-out infinite;}
@@ -528,8 +528,6 @@ select.fi2 option{background:var(--bg2);}
 .det-hdr{display:flex;align-items:center;gap:11px;
   padding:12px 14px;border-bottom:1px solid var(--border);position:sticky;top:56px;
   background:var(--bg);z-index:10;}
-.page-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
-.page-hdr-title{font-family:var(--fd);font-size:18px;font-weight:800;}
 .back-b{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);
   background:var(--card);display:flex;align-items:center;justify-content:center;
   cursor:pointer;font-size:17px;flex-shrink:0;transition:.2s;}
@@ -755,6 +753,66 @@ select.fi2 option{background:var(--bg2);}
 
 
 /* ══ SUPPORT ══ */
+// ══ ADMIN: User Profile Viewer ══
+async function viewUserProfile(uid){
+  if(!uid) return;
+  const u = await window._getUser(uid);
+  if(!u){ toast('ইউজার পাওয়া যায়নি','er'); return; }
+  
+  const mov = document.getElementById('userProfileMov');
+  if(!mov) return;
+  
+  mov.style.display='flex';
+  document.getElementById('upv-content').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#FF2D55,#FF9500);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;margin:0 auto 10px;overflow:hidden;border:3px solid var(--border);">
+        ${u.pic?`<img src="${u.pic}" style="width:100%;height:100%;object-fit:cover;">`:( u.name?u.name[0].toUpperCase():'👤')}
+      </div>
+      <div style="font-size:18px;font-weight:800;">${u.name||'নাম নেই'}</div>
+      <div style="font-size:12px;color:var(--muted);">${u.email||''}</div>
+      ${u.pic?`<button onclick="viewUserPic('${u.pic}','${u.name||'User'}')" style="margin-top:8px;padding:6px 14px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">🔍 ছবি বড় করে দেখো</button>`:''}
+    </div>
+    <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+        <div><span style="color:var(--muted);">Username</span><br><b>${u.username||'—'}</b></div>
+        <div><span style="color:var(--muted);">Gender</span><br><b>${u.gender==='male'?'👨 ছেলে':'👩 মেয়ে'}</b></div>
+        <div><span style="color:var(--muted);">Followers</span><br><b>${(u.followers||0).toLocaleString()}</b></div>
+        <div><span style="color:var(--muted);">Views</span><br><b>${(u.views||0).toLocaleString()}</b></div>
+        <div><span style="color:var(--muted);">Streak</span><br><b>${u.streak||0} দিন</b></div>
+        <div><span style="color:var(--muted);">Completed</span><br><b>${u.completed||0} টাস্ক</b></div>
+        <div><span style="color:var(--muted);">Tier</span><br><b>${u.unlockedTiers||'free'}</b></div>
+        <div><span style="color:var(--muted);">যোগ দিয়েছে</span><br><b>${u.createdAt?new Date(u.createdAt).toLocaleDateString('bn-BD'):'—'}</b></div>
+      </div>
+    </div>
+    ${u.bio?`<div style="background:var(--bg3);border-radius:12px;padding:12px;font-size:13px;"><span style="color:var(--muted);">Bio:</span> ${u.bio}</div>`:''}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="document.getElementById('userProfileMov').style.display='none'" style="flex:1;padding:10px;background:var(--border);border:none;border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;">বন্ধ করো</button>
+      <button onclick="adminDeleteUser('${uid}')" style="padding:10px 16px;background:linear-gradient(135deg,#e17055,#d63031);color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;">🗑️ মুছুন</button>
+    </div>
+  `;
+}
+
+function viewUserPic(src, name){
+  const mov = document.getElementById('picViewMov');
+  if(!mov) return;
+  mov.style.display='flex';
+  document.getElementById('picView-img').src = src;
+  document.getElementById('picView-name').textContent = name + ' এর ছবি';
+}
+
+async function adminDeleteUser(uid){
+  if(!confirm('এই ইউজারের সব ডেটা মুছে ফেলবেন?')) return;
+  await window._deleteUserData(uid);
+  document.getElementById('userProfileMov').style.display='none';
+  toast('✅ মুছে ফেলা হয়েছে','ok');
+  loadUsers(); // reload user list
+}
+
+async function openSupport(){
+  const mov = $('supportMov');
+  mov.style.display='flex'; mov.classList.add('on');
+  await loadSupportMsgs();
+}
 async function loadSupportMsgs(){
   const uid=window._uid; if(!uid) return;
   $('supportMsgs').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px;">লোড হচ্ছে...</div>';
@@ -795,7 +853,40 @@ async function sendSupportMsg(){
     await loadSupportMsgs();
   } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
 }
+$('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMov'))$('supportMov').classList.remove('on');});
 
+/* ══ NOTICES ══ */
+var noticesCache = [];
+async function openNotices(){
+  const mov = $('noticeMov');
+  mov.style.display='flex'; mov.classList.add('on');
+  $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">লোড হচ্ছে...</div>';
+  try{
+    const d = await window._getSetting('notices');
+    noticesCache = d?.list || [];
+    renderNotices();
+  } catch(e){
+    $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px;">কোনো নোটিশ নেই</div>';
+  }
+}
+function renderNotices(){
+  if(!noticesCache.length){
+    $('noticeList').innerHTML='<div style="text-align:center;padding:30px 20px;"><div style="font-size:36px;margin-bottom:10px;">📭</div><div style="color:var(--muted);font-size:13px;">এখন কোনো নোটিশ নেই</div></div>';
+    return;
+  }
+  $('noticeList').innerHTML = noticesCache.map(n => `
+    <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+        <span style="font-size:18px">${n.icon||'📢'}</span>
+        <div style="font-family:var(--fd);font-size:15px;font-weight:800;">${n.title||''}</div>
+      </div>
+      ${n.body ? `<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px;">${n.body}</div>` : ''}
+      ${n.link ? `<a href="${n.link}" target="_blank" style="display:block;background:var(--blue);color:#fff;padding:9px;border-radius:8px;text-align:center;font-size:13px;font-weight:700;text-decoration:none;">🔗 ${n.linkText||'লিঙ্কে যাও'}</a>` : ''}
+      ${n.fileUrl ? `<a href="${n.fileUrl}" download target="_blank" style="display:block;background:linear-gradient(135deg,var(--green),#00a849);color:#fff;padding:9px;border-radius:8px;text-align:center;font-size:13px;font-weight:700;text-decoration:none;margin-top:6px;">⬇️ ${n.fileName||'ডাউনলোড করো'}</a>` : ''}
+      <div style="font-size:10px;color:var(--muted);margin-top:6px;">${n.date||''}</div>
+    </div>`).join('');
+}
+$('noticeMov')?.addEventListener('click', function(e){ if(e.target===$('noticeMov')) $('noticeMov').classList.remove('on'); });
 
 /* ══ PAYMENT MODAL ══ */
 .pay-opt{display:flex;align-items:center;gap:12px;padding:12px;
@@ -856,7 +947,6 @@ async function sendSupportMsg(){
 </div>
 
 <!-- ══════════ PAYMENT MODAL ══════════ -->
-
 <div class="mov" id="payMov">
 <div class="mbox">
   <div class="mhandle"></div>
@@ -1072,37 +1162,6 @@ async function sendSupportMsg(){
     <div class="det-body" id="detBody"></div>
   </div>
 
-
-  <!-- ─── NOTICE PAGE ─── -->
-  <div class="page" id="pg-notice">
-    <div class="page-hdr">
-      <button class="back-b" onclick="showPage('home')">←</button>
-      <div class="page-hdr-title">📢 নোটিশ ও উপহার</div>
-    </div>
-    <div id="noticePageList" style="margin-top:8px;">
-      <div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড হচ্ছে...</div>
-    </div>
-  </div>
-
-
-  <!-- ─── SUPPORT PAGE ─── -->
-  <div class="page" id="pg-support">
-    <div class="page-hdr">
-      <button class="back-b" onclick="showPage('home')">←</button>
-      <div class="page-hdr-title">💬 সাপোর্ট</div>
-    </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Admin কে প্রশ্ন করো বা সমস্যা জানাও — Admin reply করবে</div>
-
-    <!-- Chat messages -->
-    <div id="supportPageMsgs" style="min-height:200px;margin-bottom:16px;"></div>
-
-    <!-- Send message -->
-    <div style="background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border);">
-      <textarea class="fi2" id="supportPageTxt" placeholder="তোমার প্রশ্ন বা সমস্যা লেখো..." style="resize:none;height:80px;margin-bottom:10px;width:100%;"></textarea>
-      <button class="btn-p" onclick="sendSupportPageMsg()" style="width:100%;">📤 পাঠাও</button>
-    </div>
-  </div>
-
   <!-- ─── LEADERBOARD ─── -->
   <!-- ─── EARNING PAGE ─── -->
   <div class="page" id="pg-earning">
@@ -1208,10 +1267,40 @@ async function sendSupportMsg(){
     <button class="ni" id="ni-profile" onclick="showPage('profile')"><span class="ni-ic">👤</span><span class="ni-lb">প্রোফাইল</span></button>
     <button class="ni" id="ni-leaderboard" onclick="showPage('leaderboard')"><span class="ni-ic">🏆</span><span class="ni-lb">র‍্যাংকিং</span></button>
     <button class="ni" id="ni-earning" onclick="showPage('earning')"><span class="ni-ic">💰</span><span class="ni-lb">Earning</span></button>
-    <button class="ni" id="ni-support" onclick="showPage('support')"><span class="ni-ic">💬</span><span class="ni-lb">সাপোর্ট</span></button>
+    <button class="ni" id="ni-support" onclick="openSupport()"><span class="ni-ic">💬</span><span class="ni-lb">সাপোর্ট</span></button>
   </div>
 
 </div><!-- /appScreen -->
+
+<!-- ══ NOTICE MODAL ══ -->
+<div id="noticeMov" class="mov" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;padding-bottom:0;">
+  <div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:16px 18px;background:linear-gradient(135deg,#FF9500,#FF6B00);border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:17px;font-weight:800;color:#fff;">📢 নোটিশ বোর্ড</div>
+      <button onclick="$('noticeMov').classList.remove('on');$('noticeMov').style.display='none';" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div id="noticeList" style="flex:1;overflow-y:auto;padding:16px;">
+      <div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">লোড হচ্ছে...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SUPPORT MODAL ══ -->
+<div id="supportMov" class="mov" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;padding-bottom:0;">
+  <div style="background:var(--card);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="padding:16px 18px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);border-radius:20px 20px 0 0;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:17px;font-weight:800;color:#fff;">💬 সাপোর্ট</div>
+      <button onclick="$('supportMov').classList.remove('on');$('supportMov').style.display='none';" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div id="supportMsgs" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;">
+      <div style="text-align:center;color:var(--muted);font-size:12px;padding:16px;">এখনো কোনো বার্তা নেই। নিচে লিখে পাঠাও।</div>
+    </div>
+    <div style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--card);">
+      <input id="supportTxt" placeholder="তোমার সমস্যা লেখো..." style="flex:1;padding:10px 13px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:13px;outline:none;">
+      <button onclick="sendSupportMsg()" style="padding:10px 16px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;">পাঠাও</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════
      MAIN JS
@@ -1289,89 +1378,6 @@ function getErrMsg(e){
 }
 
 /* ══ INIT ══ */
-/* ══ NOTICE PAGE ══ */
-async function loadNoticePage(){
-  const list = document.getElementById('noticePageList');
-  if(!list) return;
-  list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড হচ্ছে...</div>';
-  try{
-    const d = await window._getSetting('notices');
-    const notices = (d && d.list) || [];
-    if(!notices.length){
-      list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:14px;padding:60px 20px;">📭<br><br>এখন কোনো নোটিশ নেই</div>';
-      return;
-    }
-    list.innerHTML = notices.map(n => `
-      <div style="background:var(--card);border-radius:14px;padding:16px;margin-bottom:12px;border:1px solid var(--border);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <span style="font-size:26px;">${n.icon||'📢'}</span>
-          <div style="font-family:var(--fd);font-size:17px;font-weight:800;">${n.title||''}</div>
-        </div>
-        ${n.body ? `<div style="font-size:13px;line-height:1.8;margin-bottom:12px;color:var(--text);">${n.body}</div>` : ''}
-        ${n.link ? `<a href="${n.link}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--blue);color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;margin-bottom:8px;">🔗 ${n.linkText||'লিঙ্কে যাও'}</a>` : ''}
-        ${n.fileUrl ? `<a href="${n.fileUrl}" download target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--green),#00a849);color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;">⬇️ ${n.fileName||'ডাউনলোড করো'}</a>` : ''}
-        ${n.date ? `<div style="font-size:11px;color:var(--muted);margin-top:8px;">${n.date}</div>` : ''}
-      </div>`).join('');
-  } catch(e){
-    list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">লোড করতে পারিনি</div>';
-  }
-}
-
-/* ══ SUPPORT PAGE ══ */
-async function loadSupportPage(){
-  await loadSupportPageMsgs();
-}
-async function loadSupportPageMsgs(){
-  const uid = window._uid;
-  const msgDiv = document.getElementById('supportPageMsgs');
-  if(!uid || !msgDiv) return;
-  msgDiv.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">লোড হচ্ছে...</div>';
-  try{
-    const d = await window._getSetting('support_' + uid);
-    const msgs = (d && d.msgs) || [];
-    if(!msgs.length){
-      msgDiv.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:40px 20px;">💬<br><br>এখনো কোনো বার্তা নেই।<br>নিচে লিখে পাঠাও!</div>';
-      return;
-    }
-    msgDiv.innerHTML = msgs.map(m => `
-      <div style="margin-bottom:12px;display:flex;flex-direction:column;align-items:${m.from==='user'?'flex-end':'flex-start'};">
-        <div style="max-width:82%;background:${m.from==='user'?'var(--p)':'var(--card)'};color:${m.from==='user'?'#fff':'var(--text)'};border-radius:${m.from==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px'};padding:10px 14px;font-size:13px;line-height:1.65;border:${m.from==='user'?'none':'1px solid var(--border)'};">${m.text}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:4px;">${m.from==='user'?'তুমি':'👑 Admin'} • ${m.time||''}</div>
-      </div>`).join('');
-    msgDiv.scrollTop = msgDiv.scrollHeight;
-  } catch(e){
-    msgDiv.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">লোড হয়নি</div>';
-  }
-}
-async function sendSupportPageMsg(){
-  const txtEl = document.getElementById('supportPageTxt');
-  const txt = txtEl ? txtEl.value.trim() : '';
-  if(!txt){ toast('কিছু লেখো!','er'); return; }
-  const uid = window._uid;
-  if(!uid){ toast('আগে লগইন করো','er'); return; }
-  load('পাঠানো হচ্ছে...');
-  try{
-    const d = await window._getSetting('support_' + uid);
-    const msgs = (d && d.msgs) || [];
-    msgs.push({
-      from:'user', text:txt,
-      time: new Date().toLocaleString('bn-BD'),
-      uid:uid, email:window._uEmail||'',
-      name:(window._uData && window._uData.name)||''
-    });
-    await window._saveSetting('support_'+uid, {
-      msgs:msgs, uid:uid,
-      email:window._uEmail||'',
-      name:(window._uData && window._uData.name)||'',
-      lastMsg:txt, lastTime:new Date().toISOString(), replied:false
-    });
-    if(txtEl) txtEl.value = '';
-    unload();
-    toast('✅ বার্তা পাঠানো হয়েছে!','ok');
-    await loadSupportPageMsgs();
-  } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
-}
-
 window.initApp = async () => {
   loadEarningLinks();
   load('ডেটা লোড হচ্ছে...');
@@ -1414,8 +1420,6 @@ function showPage(p){
   if(p==='profile'){ renderProfile(); }
   if(p==='script'){ renderTypeGrid(); }
   if(p==='earning'){ loadEarningLinks(); }
-  if(p==='notice'){ loadNoticePage(); }
-  if(p==='support'){ loadSupportPage(); }
   window.scrollTo(0,0);
 }
 
@@ -1917,25 +1921,12 @@ function renderProfile(){
 function uploadPic(input){
   const f=input.files[0]; if(!f) return;
   const r=new FileReader();
-  r.onload=e=>{
-    const img=new Image();
-    img.onload=async()=>{
-      const canvas=document.createElement('canvas');
-      const MAX=200; let w=img.width,h=img.height;
-      if(w>h){if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}}
-      else{if(h>MAX){w=Math.round(w*MAX/h);h=MAX;}}
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(img,0,0,w,h);
-      const comp=canvas.toDataURL('image/jpeg',0.7);
-      $('profAvD').innerHTML=`<img src="${comp}" style="width:88px;height:88px;border-radius:50%;object-fit:cover">`;
-      load('ছবি সেভ হচ্ছে...');
-      try{
-        await window._saveUser(window._uid,{pic:comp});
-        if(window._uData) window._uData.pic=comp;
-        unload(); toast('✅ ছবি সেভ হয়েছে!','ok');
-      }catch(err){ unload(); toast('❌ ছবি সেভ হয়নি','er'); }
-    };
-    img.src=e.target.result;
+  r.onload=async e=>{
+    $('profAvD').innerHTML=`<img src="${e.target.result}" style="width:88px;height:88px;border-radius:50%;object-fit:cover">`;
+    load('ছবি সেভ হচ্ছে...');
+    await window._saveUser(window._uid,{pic:e.target.result});
+    window._uData.pic=e.target.result;
+    unload(); toast('✅ ছবি Firebase এ সেভ!','ok');
   };
   r.readAsDataURL(f);
 }
@@ -2010,7 +2001,7 @@ function renderAdmUsersList(users){
   $('admUsersList').innerHTML=users.length?users.map(u=>`
     <div class="uc">
       <div class="uc-top">
-        <div class="uc-av">${u.pic?`<img src="${u.pic}">`:(u.name?u.name[0].toUpperCase():'👤')}</div>
+        <div class="uc-av" onclick="${u.pic?`viewUserPic('${u.pic}','${u.name||u.email||'User'}')`:''}" style="${u.pic?'cursor:pointer;':''}">${u.pic?`<img src="${u.pic}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:(u.name?u.name[0].toUpperCase():'👤')}</div>
         <div style="flex:1;min-width:0">
           <div class="uc-name">${u.name||'—'} ${u.username?`<span style="color:var(--p);font-size:10px">${u.username}</span>`:''}</div>
           <div class="uc-det">${u.email||'—'}</div>
@@ -2123,8 +2114,66 @@ function changeAdmPass(){
 
 
 /* ══ SUPPORT ══ */
-function openSupport(){ showPage('support'); }
+// ══ ADMIN: User Profile Viewer ══
+async function viewUserProfile(uid){
+  if(!uid) return;
+  const u = await window._getUser(uid);
+  if(!u){ toast('ইউজার পাওয়া যায়নি','er'); return; }
+  
+  const mov = document.getElementById('userProfileMov');
+  if(!mov) return;
+  
+  mov.style.display='flex';
+  document.getElementById('upv-content').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#FF2D55,#FF9500);display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;margin:0 auto 10px;overflow:hidden;border:3px solid var(--border);">
+        ${u.pic?`<img src="${u.pic}" style="width:100%;height:100%;object-fit:cover;">`:( u.name?u.name[0].toUpperCase():'👤')}
+      </div>
+      <div style="font-size:18px;font-weight:800;">${u.name||'নাম নেই'}</div>
+      <div style="font-size:12px;color:var(--muted);">${u.email||''}</div>
+      ${u.pic?`<button onclick="viewUserPic('${u.pic}','${u.name||'User'}')" style="margin-top:8px;padding:6px 14px;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;">🔍 ছবি বড় করে দেখো</button>`:''}
+    </div>
+    <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:13px;">
+        <div><span style="color:var(--muted);">Username</span><br><b>${u.username||'—'}</b></div>
+        <div><span style="color:var(--muted);">Gender</span><br><b>${u.gender==='male'?'👨 ছেলে':'👩 মেয়ে'}</b></div>
+        <div><span style="color:var(--muted);">Followers</span><br><b>${(u.followers||0).toLocaleString()}</b></div>
+        <div><span style="color:var(--muted);">Views</span><br><b>${(u.views||0).toLocaleString()}</b></div>
+        <div><span style="color:var(--muted);">Streak</span><br><b>${u.streak||0} দিন</b></div>
+        <div><span style="color:var(--muted);">Completed</span><br><b>${u.completed||0} টাস্ক</b></div>
+        <div><span style="color:var(--muted);">Tier</span><br><b>${u.unlockedTiers||'free'}</b></div>
+        <div><span style="color:var(--muted);">যোগ দিয়েছে</span><br><b>${u.createdAt?new Date(u.createdAt).toLocaleDateString('bn-BD'):'—'}</b></div>
+      </div>
+    </div>
+    ${u.bio?`<div style="background:var(--bg3);border-radius:12px;padding:12px;font-size:13px;"><span style="color:var(--muted);">Bio:</span> ${u.bio}</div>`:''}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="document.getElementById('userProfileMov').style.display='none'" style="flex:1;padding:10px;background:var(--border);border:none;border-radius:10px;color:var(--text);font-size:13px;cursor:pointer;">বন্ধ করো</button>
+      <button onclick="adminDeleteUser('${uid}')" style="padding:10px 16px;background:linear-gradient(135deg,#e17055,#d63031);color:#fff;border:none;border-radius:10px;font-size:13px;cursor:pointer;">🗑️ মুছুন</button>
+    </div>
+  `;
+}
 
+function viewUserPic(src, name){
+  const mov = document.getElementById('picViewMov');
+  if(!mov) return;
+  mov.style.display='flex';
+  document.getElementById('picView-img').src = src;
+  document.getElementById('picView-name').textContent = name + ' এর ছবি';
+}
+
+async function adminDeleteUser(uid){
+  if(!confirm('এই ইউজারের সব ডেটা মুছে ফেলবেন?')) return;
+  await window._deleteUserData(uid);
+  document.getElementById('userProfileMov').style.display='none';
+  toast('✅ মুছে ফেলা হয়েছে','ok');
+  loadUsers(); // reload user list
+}
+
+async function openSupport(){
+  const mov = $('supportMov');
+  mov.style.display='flex'; mov.classList.add('on');
+  await loadSupportMsgs();
+}
 async function loadSupportMsgs(){
   const uid=window._uid; if(!uid) return;
   $('supportMsgs').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px;">লোড হচ্ছে...</div>';
@@ -2165,14 +2214,25 @@ async function sendSupportMsg(){
     await loadSupportMsgs();
   } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
 }
+$('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMov'))$('supportMov').classList.remove('on');});
 
 /* ══ NOTICES ══ */
 var noticesCache = [];
-function openNotices(){ showPage('notice'); }
-
+async function openNotices(){
+  const mov = $('noticeMov');
+  mov.style.display='flex'; mov.classList.add('on');
+  $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">লোড হচ্ছে...</div>';
+  try{
+    const d = await window._getSetting('notices');
+    noticesCache = d?.list || [];
+    renderNotices();
+  } catch(e){
+    $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px;">কোনো নোটিশ নেই</div>';
+  }
+}
 function renderNotices(){
   if(!noticesCache.length){
-    $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">এখন কোনো নোটিশ নেই</div>';
+    $('noticeList').innerHTML='<div style="text-align:center;padding:30px 20px;"><div style="font-size:36px;margin-bottom:10px;">📭</div><div style="color:var(--muted);font-size:13px;">এখন কোনো নোটিশ নেই</div></div>';
     return;
   }
   $('noticeList').innerHTML = noticesCache.map(n => `
@@ -2187,7 +2247,7 @@ function renderNotices(){
       <div style="font-size:10px;color:var(--muted);margin-top:6px;">${n.date||''}</div>
     </div>`).join('');
 }
-
+$('noticeMov')?.addEventListener('click', function(e){ if(e.target===$('noticeMov')) $('noticeMov').classList.remove('on'); });
 
 /* ══ PAYMENT MODAL ══ */
 function openPayMov(){ $('payMov').classList.add('on'); }
@@ -2252,5 +2312,20 @@ function defChallenges(){
   return out;
 }
 </script>
+<!-- ══ ADMIN: USER PROFILE MODAL ══ -->
+<div id="userProfileMov" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:var(--card);border-radius:20px;width:100%;max-width:400px;max-height:90vh;overflow-y:auto;padding:20px;">
+    <div style="font-size:16px;font-weight:800;margin-bottom:16px;text-align:center;">👤 ইউজার প্রোফাইল</div>
+    <div id="upv-content"></div>
+  </div>
+</div>
+
+<!-- ══ PIC VIEWER MODAL ══ -->
+<div id="picViewMov" style="display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.95);align-items:center;justify-content:center;flex-direction:column;gap:12px;" onclick="if(event.target===this)this.style.display='none'">
+  <div id="picView-name" style="color:#fff;font-size:14px;font-weight:700;"></div>
+  <img id="picView-img" src="" alt="" style="max-width:90vw;max-height:75vh;border-radius:12px;object-fit:contain;">
+  <button onclick="document.getElementById('picViewMov').style.display='none'" style="padding:10px 24px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:10px;font-size:14px;cursor:pointer;">বন্ধ করো</button>
+</div>
+
 </body>
 </html>
