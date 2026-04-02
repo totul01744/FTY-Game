@@ -753,10 +753,7 @@ select.fi2 option{background:var(--bg2);}
 
 
 /* ══ SUPPORT ══ */
-async function openSupport(){
-  $('supportMov').classList.add('on');
-  await loadSupportMsgs();
-}
+
 async function loadSupportMsgs(){
   const uid=window._uid; if(!uid) return;
   $('supportMsgs').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:12px;">লোড হচ্ছে...</div>';
@@ -797,450 +794,11 @@ async function sendSupportMsg(){
     await loadSupportMsgs();
   } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
 }
-$('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMov'))$('supportMov').classList.remove('on');});
+document.getElementById('supportMov').addEventListener('click',function(e){if(e.target===document.getElementById('supportMov'))document.getElementById('supportMov').classList.remove('on');});
 
 /* ══ NOTICES ══ */
 var noticesCache = [];
-async function openNotices(){
-  $('noticeMov').classList.add('on');
-  $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">লোড হচ্ছে...</div>';
-  try{
-    const d = await window._getSetting('notices');
-    noticesCache = d?.list || [];
-    renderNotices();
-  } catch(e){
-    $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:16px;">কোনো নোটিশ নেই</div>';
-  }
-}
-function renderNotices(){
-  if(!noticesCache.length){
-    $('noticeList').innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">এখন কোনো নোটিশ নেই</div>';
-    return;
-  }
-  $('noticeList').innerHTML = noticesCache.map(n => `
-    <div style="background:var(--bg3);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid var(--border);">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-        <span style="font-size:18px">${n.icon||'📢'}</span>
-        <div style="font-family:var(--fd);font-size:15px;font-weight:800;">${n.title||''}</div>
-      </div>
-      ${n.body ? `<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:8px;">${n.body}</div>` : ''}
-      ${n.link ? `<a href="${n.link}" target="_blank" style="display:block;background:var(--blue);color:#fff;padding:9px;border-radius:8px;text-align:center;font-size:13px;font-weight:700;text-decoration:none;">🔗 ${n.linkText||'লিঙ্কে যাও'}</a>` : ''}
-      ${n.fileUrl ? `<a href="${n.fileUrl}" download target="_blank" style="display:block;background:linear-gradient(135deg,var(--green),#00a849);color:#fff;padding:9px;border-radius:8px;text-align:center;font-size:13px;font-weight:700;text-decoration:none;margin-top:6px;">⬇️ ${n.fileName||'ডাউনলোড করো'}</a>` : ''}
-      <div style="font-size:10px;color:var(--muted);margin-top:6px;">${n.date||''}</div>
-    </div>`).join('');
-}
-$('noticeMov')?.addEventListener('click', function(e){ if(e.target===$('noticeMov')) $('noticeMov').classList.remove('on'); });
 
-/* ══ PAYMENT MODAL ══ */
-.pay-opt{display:flex;align-items:center;gap:12px;padding:12px;
-  background:var(--card);border:1px solid var(--border);border-radius:11px;
-  cursor:pointer;transition:.2s;margin-bottom:8px;}
-.pay-opt:hover,.pay-opt.on{border-color:var(--p);}
-.pay-opt.on{background:rgba(255,45,85,.05);}
-.pay-logo{width:40px;height:40px;border-radius:9px;
-  display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
-.pay-bk{background:#E2136E;}.pay-ng{background:#F7941D;}
-.pay-name{font-size:13px;font-weight:700;}
-.pay-num{font-size:11px;color:var(--muted);margin-top:2px;}
-.cdown-box{text-align:center;padding:10px;
-  background:rgba(255,215,0,.05);border-radius:9px;margin-bottom:11px;}
-.cdown-lbl{font-size:11px;color:var(--muted);}
-.cdown-val{font-family:var(--fd);font-size:26px;font-weight:800;color:var(--gold);}
-</style>
-</head>
-<body>
-
-<!-- GLOBAL LOADER -->
-<div id="globalLoader"><div class="gl-spin"></div><div class="gl-txt" id="loaderTxt">লোড হচ্ছে...</div></div>
-<div id="toast"></div>
-
-<!-- ══════════ AUTH SCREEN ══════════ -->
-<div id="authScreen">
-<div class="auth-wrap">
-  <div class="auth-brand">
-    <span class="auth-crown">👑</span>
-    <div class="auth-brand-name">FYP King</div>
-    <div class="auth-brand-sub">TikTok ভাইরাল প্ল্যাটফর্ম — Bangladesh</div>
-  </div>
-  <div class="auth-card">
-    <div class="auth-tabs-row">
-      <button class="atab on" onclick="switchAuthTab('login',this)">🔐 লগইন</button>
-      <button class="atab" onclick="switchAuthTab('signup',this)">📝 নিবন্ধন</button>
-    </div>
-
-    <!-- LOGIN -->
-    <div class="auth-sec on" id="auth-login">
-      <input class="fi" id="lEmail" type="email" placeholder="📧 Email দাও">
-      <input class="fi" id="lPass" type="password" placeholder="🔑 Password দাও">
-      <span class="forgot-link" onclick="doForgotPass()">Password ভুলে গেছ?</span>
-      <button class="btn-main" onclick="doLogin()">🔐 লগইন করো</button>
-      <div class="auth-note">নতুন? উপরে "নিবন্ধন" ট্যাবে যাও</div>
-    </div>
-
-    <!-- SIGNUP -->
-    <div class="auth-sec" id="auth-signup">
-      <input class="fi" id="sName" placeholder="👤 তোমার নাম">
-      <input class="fi" id="sEmail" type="email" placeholder="📧 Email দাও">
-      <input class="fi" id="sPass" type="password" placeholder="🔑 Password (কমপক্ষে ৬ অক্ষর)">
-      <button class="btn-main" onclick="doSignup()">📝 অ্যাকাউন্ট তৈরি করো</button>
-      <div class="auth-note">নিবন্ধন করলে ডেটা Firebase এ সেভ হবে</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ══════════ PAYMENT MODAL ══════════ -->
-<div class="mov" id="payMov">
-<div class="mbox">
-  <div class="mhandle"></div>
-  <div class="mov-title">🔓 চ্যালেঞ্জ আনলক করো</div>
-  <div class="cdown-box">
-    <div class="cdown-lbl">⏳ অফার শেষ হবে</div>
-    <div class="cdown-val" id="cdVal">--:--:--</div>
-  </div>
-  <div style="display:flex;justify-content:space-between;background:var(--bg3);border-radius:11px;padding:12px;margin-bottom:12px;">
-    <div>
-      <div style="font-size:11px;color:var(--muted)">স্বাভাবিক মূল্য</div>
-      <div style="font-size:15px;text-decoration:line-through;color:var(--muted)" id="origPrice">৮৯৯ টাকা</div>
-    </div>
-    <div style="text-align:right">
-      <div style="font-size:11px;color:var(--green)">বিশেষ মূল্য</div>
-      <div style="font-family:var(--fd);font-size:28px;font-weight:800;color:var(--p)" id="offerPrice">৪৯৯ টাকা</div>
-    </div>
-  </div>
-  <div class="pay-opt" onclick="selPay(this)">
-    <div class="pay-logo pay-bk">💳</div>
-    <div><div class="pay-name">bKash</div><div class="pay-num" id="bkNum">—</div></div>
-  </div>
-  <div class="pay-opt" onclick="selPay(this)">
-    <div class="pay-logo pay-ng">💸</div>
-    <div><div class="pay-name">Nagad</div><div class="pay-num" id="ngNum">—</div></div>
-  </div>
-  <div style="font-size:11px;color:var(--muted);background:var(--bg3);border-radius:9px;padding:10px;margin:10px 0;line-height:1.7;">
-    📌 উপরের নম্বরে পেমেন্ট পাঠাও → Screenshot তুলো →
-    <span id="tgAdmin" style="color:var(--blue)">@admin</span> কে পাঠাও → Admin আনলক করবে
-  </div>
-  <button class="btn-main" onclick="closePayMov()">✅ বুঝলাম, পেমেন্ট করব</button>
-</div>
-</div>
-
-<!-- IMAGE MODAL -->
-<div class="mov" id="imgMov">
-<div class="mbox">
-  <div class="mhandle"></div>
-  <div class="mov-title">🔍 ছবি বিশ্লেষণ</div>
-  <div id="imgMovBody"></div>
-</div>
-</div>
-
-<!-- ══════════ APP SCREEN ══════════ -->
-<div id="appScreen">
-
-  <!-- HEADER -->
-  <div class="hdr">
-    <div class="logo">👑 FYP King</div>
-    <div class="hdr-r">
-      <button class="hdr-chip streak-chip">🔥 <span id="hStreak">0</span></button>
-      <button class="hdr-chip out-chip" onclick="doLogout()">↩</button>
-    </div>
-  </div>
-
-  <!-- ─── HOME ─── -->
-  <div class="page on" id="pg-home">
-    <div class="hero">
-      <div class="hero-inner">
-        <span class="hero-crown">👑</span>
-        <div class="hero-tag">Bangladesh #1 TikTok Growth Platform</div>
-        <div class="hero-title">
-          <span class="ht-r">ভাইরাল</span> হওয়ার<br>
-          <span class="ht-g">সহজ পথ</span> এখানে!
-        </div>
-        <div class="hero-desc">৬০ দিনের চ্যালেঞ্জ করো, স্ক্রিপ্ট নাও,<br>TikTok FYP এ তোমার জায়গা করো।</div>
-        <div class="welcome-card" style="text-align:left">
-          <div class="wc-av" id="wcAv">👤</div>
-          <div>
-            <div class="wc-name" id="wcName">স্বাগতম!</div>
-            <div class="wc-stats" id="wcStats">প্রোফাইল সম্পূর্ণ করো</div>
-          </div>
-        </div>
-        <div class="hero-pills">
-          <div class="pill"><div class="pill-v" id="hDone">০</div><div class="pill-l">সম্পূর্ণ</div></div>
-          <div class="pill"><div class="pill-v" id="hStreak2">০</div><div class="pill-l">🔥 স্ট্রিক</div></div>
-          <div class="pill"><div class="pill-v">৬০</div><div class="pill-l">চ্যালেঞ্জ</div></div>
-        </div>
-        <div class="hero-btns">
-          <button class="hbtn hbtn-p" onclick="showPage('challenge')">🎬 চ্যালেঞ্জ</button>
-          <button class="hbtn hbtn-s" onclick="showPage('script')">✍️ স্ক্রিপ্ট</button>
-          <button class="hbtn hbtn-s" onclick="openNotices()" style="background:linear-gradient(135deg,#FF9500,#FF6B00)">📢 নোটিশ</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="prog-wrap">
-      <div class="prog-card">
-        <div class="prog-hdr">
-          <div class="prog-label">তোমার অগ্রগতি</div>
-          <div class="prog-count" id="progCount">০/৬০ দিন</div>
-        </div>
-        <div class="pbar-bg"><div class="pbar-fill" id="progBar" style="width:0%"></div></div>
-        <div class="prog-stats">
-          <div class="ps"><div class="ps-v" id="psDone">০</div><div class="ps-l">সম্পূর্ণ</div></div>
-          <div class="ps"><div class="ps-v" id="psStreak">০</div><div class="ps-l">🔥 ধারাবাহিক</div></div>
-          <div class="ps"><div class="ps-v" id="psLeft">৬০</div><div class="ps-l">বাকি দিন</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="today-wrap">
-      <div class="sec-t" style="padding:0 0 0 0;">⚡ আজকের চ্যালেঞ্জ</div>
-      <div class="today-card" id="todayCard" onclick="openTodayChallenge()">
-        <div><span class="tc-live"><span class="tc-dot"></span> LIVE</span></div>
-        <span class="tc-emoji" id="tcEmoji">🎬</span>
-        <div class="tc-title" id="tcTitle">লোড হচ্ছে...</div>
-        <div class="tc-desc" id="tcDesc">প্রতিদিন একটি নতুন চ্যালেঞ্জ সম্পূর্ণ করো!</div>
-        <button class="tc-btn">শুরু করো →</button>
-      </div>
-    </div>
-
-    <div class="quick-wrap">
-      <div class="sec-t">🚀 দ্রুত অ্যাক্সেস</div>
-      <div class="quick-grid">
-        <div class="qi" onclick="showPage('script')">
-          <span class="qi-ic">🤖</span>
-          <div class="qi-t">স্ক্রিপ্ট তৈরি</div>
-          <div class="qi-d">৮ ধরনের বাংলা স্ক্রিপ্ট</div>
-          <div class="qi-badge">✨</div>
-        </div>
-        <div class="qi" onclick="showPage('leaderboard')">
-          <span class="qi-ic">🏆</span>
-          <div class="qi-t">TikTok র‍্যাংকিং</div>
-          <div class="qi-d">ফলোয়ার লিডারবোর্ড</div>
-          <div class="qi-badge">লাইভ</div>
-        </div>
-        <div class="qi" onclick="goImgAnalyze()">
-          <span class="qi-ic">📸</span>
-          <div class="qi-t">ছবি বিশ্লেষণ</div>
-          <div class="qi-d">TikTok টিপস পাও</div>
-        </div>
-        <div class="qi" onclick="showPage('profile')">
-          <span class="qi-ic">👤</span>
-          <div class="qi-t">প্রোফাইল</div>
-          <div class="qi-d">তোমার তথ্য ও স্ট্যাটস</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="top3-wrap">
-      <div class="sec-t">🏅 শীর্ষ ৩ — TikTok র‍্যাংকিং</div>
-      <div class="top3-grid" id="top3Grid">
-        <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:12px;padding:16px;">লোড হচ্ছে...</div>
-      </div>
-      <button class="btn-s" onclick="showPage('leaderboard')" style="width:100%;margin-top:6px;">সব র‍্যাংকিং দেখো →</button>
-    </div>
-  </div><!-- /home -->
-
-  <!-- ─── SCRIPT ─── -->
-  <div class="page" id="pg-script">
-    <div class="script-wrap">
-      <div class="sec-t">✍️ স্ক্রিপ্ট জেনারেটর</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">ধরন বেছে নাও → বাংলায় স্ক্রিপ্ট তৈরি হবে!</div>
-      <div class="type-grid" id="typeGrid"></div>
-      <div class="fg">
-        <label class="fl">লিঙ্গ</label>
-        <div class="gtab-row">
-          <button class="gtab on" onclick="setGender('male',this)">👦 ছেলে</button>
-          <button class="gtab" onclick="setGender('female',this)">👧 মেয়ে</button>
-        </div>
-      </div>
-      <button class="btn-p" id="genBtn" onclick="genScript()" disabled>✨ স্ক্রিপ্ট তৈরি করো</button>
-      <div class="gen-out" id="genOut">
-        <div class="gen-txt" id="genTxt"></div>
-        <div style="display:flex;gap:8px;margin-top:12px;">
-          <button class="btn-s" onclick="copyScript()">📋 কপি</button>
-          <button class="btn-s" onclick="genScript()">🔄 নতুন</button>
-        </div>
-      </div>
-      <div style="margin-top:22px;">
-        <div class="sec-t">📸 ছবি বিশ্লেষণ</div>
-        <div class="img-drop" onclick="document.getElementById('imgInput').click()">
-          <div style="font-size:34px;margin-bottom:7px;">📷</div>
-          <div style="font-size:13px;font-weight:700;">ছবি বেছে নাও</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;">TikTok টিপস পাবে</div>
-        </div>
-        <img id="imgPrev" class="img-prev">
-        <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="previewImg(this)">
-        <button class="btn-p" id="analyzeBtn" onclick="analyzeImg()" disabled style="margin-top:8px;">🔍 বিশ্লেষণ করো</button>
-      </div>
-      <div style="margin-top:22px;">
-        <div class="sec-t">💡 ভিডিও টিপস</div>
-        <div id="videoTipsDiv"></div>
-      </div>
-    </div>
-  </div><!-- /script -->
-
-  <!-- ─── CHALLENGE ─── -->
-  <div class="page" id="pg-challenge">
-    <div class="chal-wrap">
-      <div class="ftabs">
-        <button class="ftab on" onclick="filterC('all',this)">সব</button>
-        <button class="ftab" onclick="filterC('available',this)">✅ খোলা</button>
-        <button class="ftab" onclick="filterC('free',this)">🆓 ফ্রি</button>
-        <button class="ftab" onclick="filterC('paid',this)">💎 পেইড</button>
-        <button class="ftab" onclick="filterC('done',this)">🏆 শেষ</button>
-      </div>
-      <div class="chal-grid" id="chalGrid"></div>
-    </div>
-  </div>
-
-  <!-- ─── DETAIL ─── -->
-  <div class="page" id="pg-detail">
-    <div class="det-hdr">
-      <div class="back-b" onclick="showPage('challenge')">←</div>
-      <div class="det-tw">
-        <div class="det-day-lbl" id="detDay">দিন ১</div>
-        <div class="det-title-lbl" id="detTitleLbl">চ্যালেঞ্জ</div>
-      </div>
-      <div class="tier-b" id="detTier"></div>
-    </div>
-    <div class="det-body" id="detBody"></div>
-  </div>
-
-  <!-- ─── LEADERBOARD ─── -->
-  <!-- ─── EARNING PAGE ─── -->
-  <div class="page" id="pg-earning">
-    <div class="sec-t" style="margin-top:16px">💰 Earning</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">নিচের বাটনে ক্লিক করে আয় করো</div>
-    <div style="background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid var(--border);">
-      <div style="font-size:18px;font-weight:800;margin-bottom:6px;">🎮 FTY Game</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">গেম খেলো এবং আয় করো</div>
-      <button class="btn-p" onclick="openEarningLink('ftyGame')">🎮 FTY Game খেলো</button>
-    </div>
-    <div style="background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid var(--border);">
-      <div style="font-size:18px;font-weight:800;margin-bottom:6px;">📋 Everyday Earning</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">প্রতিদিন আয় করো</div>
-      <button class="btn-p" onclick="openEarningLink('everydayTask')" style="background:linear-gradient(135deg,#0088cc,#0066aa)">📋 Everyday Earning</button>
-    </div>
-    <div style="background:var(--card);border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid var(--border);">
-      <div style="font-size:18px;font-weight:800;margin-bottom:6px;">🚀 Start Your Business</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">তোমার ব্যবসা শুরু করো</div>
-      <button class="btn-p" onclick="openEarningLink('startBusiness')" style="background:linear-gradient(135deg,#FF9500,#FF6B00)">🚀 Start Your Business</button>
-    </div>
-  </div>
-
-  <div class="page" id="pg-leaderboard">
-    <div class="lb-wrap">
-      <div class="lb-hero-card">
-        <div class="lb-hero-title">🏆 TikTok র‍্যাংকিং</div>
-        <div class="lb-hero-sub">ফলোয়ার যত বেশি, র‍্যাংক তত উপরে • রিয়েলটাইম</div>
-      </div>
-      <!-- my rank -->
-      <div class="my-rank">
-        <div class="mr-av" id="mrAv">👤</div>
-        <div style="flex:1">
-          <div class="mr-lbl">তোমার অবস্থান</div>
-          <div class="mr-name" id="mrName">—</div>
-          <div class="mr-fol" id="mrFol">প্রোফাইলে ফলোয়ার দাও</div>
-        </div>
-        <div>
-          <div class="mr-pos" id="mrPos">—</div>
-          <div style="font-size:9px;color:var(--muted)">র‍্যাংক</div>
-        </div>
-      </div>
-      <!-- badges -->
-      <div class="sec-t">🎖️ তোমার ব্যাজ</div>
-      <div class="badges-row" id="badgesRow"></div>
-      <!-- tabs -->
-      <div class="lb-tabs">
-        <button class="lbtab on" onclick="switchLB('followers',this)">👥 ফলোয়ার</button>
-        <button class="lbtab" onclick="switchLB('streak',this)">🔥 স্ট্রিক</button>
-        <button class="lbtab" onclick="switchLB('completed',this)">✅ সম্পূর্ণ</button>
-      </div>
-      <div id="lbList"><div style="text-align:center;color:var(--muted);font-size:12px;padding:20px;">লোড হচ্ছে...</div></div>
-    </div>
-  </div>
-
-  <!-- ─── PROFILE ─── -->
-  <div class="page" id="pg-profile">
-    <div class="profile-wrap">
-      <div class="prof-hero">
-        <div class="prof-av-wrap">
-          <div class="prof-av" id="profAvD">👤</div>
-          <div class="prof-edit-ic" onclick="document.getElementById('profPicI').click()">✏️</div>
-        </div>
-        <input type="file" id="profPicI" accept="image/*" style="display:none" onchange="uploadPic(this)">
-        <div class="prof-name-d" id="profNameD">তোমার নাম</div>
-        <div class="prof-user-d" id="profUserD">@username</div>
-        <div class="prof-bio-d" id="profBioD">—</div>
-        <div class="prof-pills">
-          <div class="pp"><div class="pp-v" id="ppDone">০</div><div class="pp-l">দিন</div></div>
-          <div class="pp"><div class="pp-v" id="ppViews">০</div><div class="pp-l">ভিউস</div></div>
-          <div class="pp"><div class="pp-v" id="ppStreak">০</div><div class="pp-l">🔥</div></div>
-        </div>
-      </div>
-      
-      <div class="prof-form">
-        <div class="sec-t">✏️ প্রোফাইল তথ্য</div>
-        <div class="fg"><label class="fl">পুরো নাম</label><input class="fi2" id="pName" placeholder="তোমার নাম"></div>
-        <div class="fg"><label class="fl">TikTok Username</label><input class="fi2" id="pUser" placeholder="@username"></div>
-        <div class="fg"><label class="fl">Bio</label><textarea class="fi2" id="pBio" placeholder="তোমার সম্পর্কে..."></textarea></div>
-        <div class="fg"><label class="fl">লিঙ্গ</label>
-          <select class="fi2" id="pGender">
-            <option value="male">👦 ছেলে</option>
-            <option value="female">👧 মেয়ে</option>
-          </select>
-        </div>
-        <div class="fg"><label class="fl">TikTok ফলোয়ার সংখ্যা</label><input class="fi2" id="pFollowers" type="number" placeholder="0"></div>
-        <div class="fg"><label class="fl">মোট ভিউস</label><input class="fi2" id="pViews" type="number" placeholder="0"></div>
-        <button class="btn-p" onclick="saveProfile()">💾 সেভ করো</button>
-      </div>
-      <div class="acc-info">
-        📧 <strong>Account:</strong> <span id="accInfo">—</span><br>
-        🔑 <span style="cursor:pointer;color:var(--blue)" onclick="doForgotPassApp()">Password রিসেট করো</span>
-      </div>
-    </div>
-  </div>
-
-
-
-  <!-- BOTTOM NAV -->
-  <div class="bnav">
-    <button class="ni on" id="ni-home" onclick="showPage('home')"><span class="ni-ic">🏠</span><span class="ni-lb">হোম</span></button>
-    <button class="ni" id="ni-script" onclick="showPage('script')"><span class="ni-ic">🤖</span><span class="ni-lb">স্ক্রিপ্ট</span></button>
-    <button class="ni" id="ni-challenge" onclick="showPage('challenge')"><span class="ni-ic">🎬</span><span class="ni-lb">চ্যালেঞ্জ</span></button>
-    <button class="ni" id="ni-profile" onclick="showPage('profile')"><span class="ni-ic">👤</span><span class="ni-lb">প্রোফাইল</span></button>
-    <button class="ni" id="ni-leaderboard" onclick="showPage('leaderboard')"><span class="ni-ic">🏆</span><span class="ni-lb">র‍্যাংকিং</span></button>
-    <button class="ni" id="ni-earning" onclick="showPage('earning')"><span class="ni-ic">💰</span><span class="ni-lb">Earning</span></button>
-    <button class="ni" id="ni-support" onclick="openSupport()"><span class="ni-ic">💬</span><span class="ni-lb">সাপোর্ট</span></button>
-  </div>
-
-</div><!-- /appScreen -->
-
-<!-- ══════════════════════════════════════════════
-     MAIN JS
-══════════════════════════════════════════════ -->
-<script>
-const ADM_PK = 'fyp_adm_pass_v5';
-
-/* ── state ── */
-let S = { progress:{}, streak:0, lastDone:null };
-let challenges = null, settings = {}, admIn = false;
-let selType = null, selGender = 'male', chalFilter = 'all', lbType = 'followers';
-let rankUnsub = null, allUsersCache = [], imgB64 = null;
-
-/* ══ HELPERS ══ */
-const $ = id => document.getElementById(id);
-function toast(msg, t='ok'){ const el=$('toast'); el.textContent=msg; el.className=`toast show ${t}`; setTimeout(()=>el.classList.remove('show'),3000); }
-function load(txt){ $('globalLoader').classList.add('on'); $('loaderTxt').textContent=txt||'লোড হচ্ছে...'; }
-function unload(){ $('globalLoader').classList.remove('on'); }
-function fmtN(n){ if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return n||0; }
-
-/* ══ AUTH ══ */
-function switchAuthTab(tab,btn){
-  document.querySelectorAll('.atab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  document.querySelectorAll('.auth-sec').forEach(s=>s.classList.remove('on'));
-  $('auth-'+tab).classList.add('on');
-}
 async function doLogin(){
   const em=$('lEmail').value.trim(), pw=$('lPass').value;
   if(!em||!pw){ toast('Email ও Password দাও','er'); return; }
@@ -2071,7 +1629,6 @@ async function sendSupportMsg(){
     await loadSupportMsgs();
   } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
 }
-$('supportMov')?.addEventListener('click',function(e){if(e.target===$('supportMov'))$('supportMov').classList.remove('on');});
 
 /* ══ NOTICES ══ */
 var noticesCache = [];
@@ -2103,7 +1660,7 @@ function renderNotices(){
       <div style="font-size:10px;color:var(--muted);margin-top:6px;">${n.date||''}</div>
     </div>`).join('');
 }
-$('noticeMov')?.addEventListener('click', function(e){ if(e.target===$('noticeMov')) $('noticeMov').classList.remove('on'); });
+document.getElementById('noticeMov').addEventListener('click',function(e){if(e.target===document.getElementById('noticeMov'))document.getElementById('noticeMov').classList.remove('on');});
 
 /* ══ PAYMENT MODAL ══ */
 function openPayMov(){ $('payMov').classList.add('on'); }
@@ -2169,4 +1726,30 @@ function defChallenges(){
 }
 </script>
 </body>
-</html>
+</html
+<!-- ══ NOTICE MODAL ══ -->
+<div class="mov" id="noticeMov">
+  <div class="mov-card" style="max-height:82vh;overflow-y:auto;">
+    <div class="mov-title">📢 নোটিশ ও উপহার</div>
+    <div id="noticeList" style="margin-top:12px;min-height:60px;"></div>
+    <button class="btn-s" onclick="document.getElementById('noticeMov').classList.remove('on')" style="width:100%;margin-top:12px;">✅ বন্ধ করো</button>
+  </div>
+</div>
+
+<!-- ══ SUPPORT MODAL ══ -->
+<div class="mov" id="supportMov">
+  <div class="mov-card" style="max-height:85vh;display:flex;flex-direction:column;">
+    <div class="mov-title">💬 সাপোর্ট</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Admin কে প্রশ্ন করো বা সমস্যা জানাও</div>
+    <div id="supportMsgs" style="flex:1;overflow-y:auto;margin-bottom:10px;min-height:80px;"></div>
+    <div style="border-top:1px solid var(--border);padding-top:10px;">
+      <textarea class="fi2" id="supportTxt" placeholder="তোমার প্রশ্ন বা সমস্যা লেখো..." style="resize:none;height:70px;margin-bottom:8px;width:100%;"></textarea>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-p" onclick="sendSupportMsg()" style="flex:1;">📤 পাঠাও</button>
+        <button class="btn-s" onclick="document.getElementById('supportMov').classList.remove('on')">বন্ধ</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+>
