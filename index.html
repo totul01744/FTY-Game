@@ -1635,7 +1635,7 @@ function showLocked(c){
         const remaining = Math.max(0, 24*60*60*1000 - elapsed);
         const hrs = Math.floor(remaining/3600000);
         const mins = Math.floor((remaining%3600000)/60000);
-        toast(\`⏳ \${hrs} ঘন্টা \${mins} মিনিট পরে উন্মুক্ত হবে\`,'er');
+        toast('⏳ '+hrs+' ঘন্টা '+mins+' মিনিট পরে উন্মুক্ত হবে','er');
         return;
       }
     }
