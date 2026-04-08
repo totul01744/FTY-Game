@@ -854,9 +854,9 @@ async function sendSupportMsg(){
 
     <!-- LOGIN -->
     <div class="auth-sec on" id="auth-login">
-      <form id="loginForm" onsubmit="event.preventDefault();doLogin();" autocomplete="on" style="display:contents">
-        <input class="fi" id="lEmail" name="email" type="email" placeholder="📧 Email দাও" autocomplete="email" inputmode="email">
-        <input class="fi" id="lPass" name="password" type="password" placeholder="🔑 Password দাও" autocomplete="current-password">
+      <form autocomplete="on" onsubmit="event.preventDefault();doLogin();" style="display:contents;">
+        <input class="fi" id="lEmail" name="email" type="email" autocomplete="email" placeholder="📧 Email দাও">
+        <input class="fi" id="lPass" name="password" type="password" autocomplete="current-password" placeholder="🔑 Password দাও">
         <span class="forgot-link" onclick="doForgotPass()">Password ভুলে গেছ?</span>
         <button class="btn-main" type="submit">🔐 লগইন করো</button>
         <div class="auth-note">নতুন? উপরে "নিবন্ধন" ট্যাবে যাও</div>
@@ -1682,10 +1682,10 @@ function openChal(id){
     <div class="dsec"><div class="dsec-hdr"><div class="dsec-ic ic2">👗</div><div class="dsec-title-lbl">পোশাক</div></div>
       <div class="gtab-row"><button class="gtab on" onclick="swOutfit('boy',this,${id})">👦 ছেলে</button><button class="gtab" onclick="swOutfit('girl',this,${id})">👧 মেয়ে</button></div>
       <div id="outfitD${id}"><div class="outfit-g">
-        ${outfitItemHTML(boy.top,'উপরে',boy.topLink)}
-        ${outfitItemHTML(boy.bottom,'নিচে',boy.bottomLink)}
-        ${outfitItemHTML(boy.shoes,'জুতা',boy.shoesLink)}
-        ${outfitItemHTML(boy.accessories,'Accessories',boy.accessoriesLink)}
+        ${oItem(boy.top,'উপরে',boy.topLink)}
+        ${oItem(boy.bottom,'নিচে',boy.bottomLink)}
+        ${oItem(boy.shoes,'জুতা',boy.shoesLink)}
+        ${oItem(boy.accessories,'Accessories',boy.accessoriesLink)}
       </div></div>
     </div>
     ${music.length?`<div class="dsec"><div class="dsec-hdr"><div class="dsec-ic ic3">🎵</div><div class="dsec-title-lbl">মিউজিক</div></div>${musicHtml}</div>`:''}
@@ -1697,38 +1697,29 @@ function openChal(id){
               `<button class="done-btn" onclick="doneChal(${id})">✅ আজকের চ্যালেঞ্জ সম্পূর্ণ করলাম!</button>`}`;
   showPage('detail');
 }
-function outfitItemHTML(val, label, link){
-  if(!val && !link) return '';
-  const orderBtn = link
-    ? `<a href="${link}" target="_blank" rel="noopener" onclick="openOutfitLink(event,'${link}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:linear-gradient(135deg,#FF2D55,#FF9500);color:#fff;border-radius:6px;font-size:10px;font-weight:700;text-decoration:none;cursor:pointer;flex-shrink:0;">🛒 অর্ডার</a>`
-    : `<span style="font-size:9px;color:var(--muted);font-style:italic;">না থাকলে যোগ করা হয়নি</span>`;
-  return `<div class="oi" style="display:flex;flex-direction:column;gap:4px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-      <div class="oi-c">${label}</div>
-      ${orderBtn}
+function oItem(val, label, link){
+  const btn = link
+    ? `<a href="${link}" target="_blank" rel="noopener noreferrer" onclick="if(window.Telegram&&Telegram.WebApp&&Telegram.WebApp.openLink){event.preventDefault();Telegram.WebApp.openLink('${link}');}" style="display:inline-block;padding:4px 10px;background:linear-gradient(135deg,#FF2D55,#FF9500);color:#fff;border-radius:6px;font-size:10px;font-weight:700;text-decoration:none;cursor:pointer;">🛒 Order</a>`
+    : `<span style="font-size:9px;color:var(--muted);font-style:italic;">না থাকলে Order করুন</span>`;
+  return `<div class="oi" style="display:flex;flex-direction:column;gap:5px;padding:6px;background:var(--bg3);border-radius:8px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:4px;">
+      <div class="oi-c" style="margin-bottom:0;">${label}</div>
+      ${btn}
     </div>
     <div class="oi-v">${val||'—'}</div>
   </div>`;
-}
-function openOutfitLink(e, url){
-  e.preventDefault();
-  if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){
-    window.Telegram.WebApp.openLink(url);
-  } else {
-    window.open(url,'_blank');
-  }
 }
 function swOutfit(type,btn,id){
   const c=(challenges||[]).find(x=>x.id===id); if(!c) return;
   btn.closest('.gtab-row').querySelectorAll('.gtab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
   const o=type==='boy'?c.outfitBoy||{}:c.outfitGirl||{};
-  const ex=type==='girl'&&o.makeup?outfitItemHTML(o.makeup,'Makeup',o.makeupLink):'';
+  const ex=type==='girl'&&o.makeup?oItem(o.makeup,'Makeup',o.makeupLink):'';
   $(`outfitD${id}`).innerHTML=`<div class="outfit-g">
-    ${outfitItemHTML(o.top,'উপরে',o.topLink)}
-    ${outfitItemHTML(o.bottom,'নিচে',o.bottomLink)}
-    ${outfitItemHTML(o.shoes,'জুতা',o.shoesLink)}
-    ${outfitItemHTML(o.accessories,'Accessories',o.accessoriesLink)}
+    ${oItem(o.top,'উপরে',o.topLink)}
+    ${oItem(o.bottom,'নিচে',o.bottomLink)}
+    ${oItem(o.shoes,'জুতা',o.shoesLink)}
+    ${oItem(o.accessories,'Accessories',o.accessoriesLink)}
     ${ex}</div>`;
 }
 async function doneChal(id){
