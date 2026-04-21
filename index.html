@@ -118,6 +118,7 @@ function goApp(uData){
   if(uData && uData.isAdmin===true){
     if(b) b.style.display='block';
     hidePendingScreen();
+    if(typeof unload==='function') unload();
     if(window.initApp) window.initApp();
     return;
   }
@@ -126,12 +127,14 @@ function goApp(uData){
   if(uData && uData.approved===true){
     if(b) b.style.display='block';
     hidePendingScreen();
+    if(typeof unload==='function') unload();
     if(window.initApp) window.initApp();
     return;
   }
 
   // approved নয় — appScreen লুকাও, pending screen দেখাও
   if(b) b.style.display='none';
+  if(typeof unload==='function') unload();
   showPendingScreen();
 }
 function showPendingScreen(){
@@ -1009,7 +1012,7 @@ async function sendSupportMsg(){
         </div>
         <div class="hero-btns">
           <button class="hbtn hbtn-p" onclick="showPage('challenge')">🎬 চ্যালেঞ্জ</button>
-          <button class="hbtn hbtn-s" onclick="showPage('script')">✍️ স্ক্রিপ্ট</button>
+          <button class="hbtn hbtn-s" onclick="window.open('https://fyp-script.vercel.app/','_blank')">✍️ স্ক্রিপ্ট</button>
           <button class="hbtn hbtn-s" onclick="openNotices()" style="background:linear-gradient(135deg,#FF9500,#FF6B00)">📢 নোটিশ</button>
         </div>
       </div>
@@ -1044,7 +1047,7 @@ async function sendSupportMsg(){
     <div class="quick-wrap">
       <div class="sec-t">🚀 দ্রুত অ্যাক্সেস</div>
       <div class="quick-grid">
-        <div class="qi" onclick="showPage('script')">
+        <div class="qi" onclick="window.open('https://fyp-script.vercel.app/','_blank')"  >
           <span class="qi-ic">🤖</span>
           <div class="qi-t">স্ক্রিপ্ট তৈরি</div>
           <div class="qi-d">৮ ধরনের বাংলা স্ক্রিপ্ট</div>
@@ -1276,7 +1279,7 @@ async function sendSupportMsg(){
   <!-- BOTTOM NAV -->
   <div class="bnav">
     <button class="ni on" id="ni-home" onclick="showPage('home')"><span class="ni-ic">🏠</span><span class="ni-lb">হোম</span></button>
-    <button class="ni" id="ni-script" onclick="showPage('script')"><span class="ni-ic">🤖</span><span class="ni-lb">স্ক্রিপ্ট</span></button>
+    <button class="ni" id="ni-script" onclick="window.open('https://fyp-script.vercel.app/','_blank')"><span class="ni-ic">🤖</span><span class="ni-lb">স্ক্রিপ্ট</span></button>
     <button class="ni" id="ni-challenge" onclick="showPage('challenge')"><span class="ni-ic">🎬</span><span class="ni-lb">চ্যালেঞ্জ</span></button>
     <button class="ni" id="ni-profile" onclick="showPage('profile')"><span class="ni-ic">👤</span><span class="ni-lb">প্রোফাইল</span></button>
     <button class="ni" id="ni-leaderboard" onclick="showPage('leaderboard')"><span class="ni-ic">🏆</span><span class="ni-lb">র‍্যাংকিং</span></button>
@@ -1516,14 +1519,20 @@ async function checkApproval(){
   if(!uid) return;
   try{
     var uData = await window._getUser(uid);
-    if(uData && uData.approved === true){
+    if(uData && (uData.approved === true || uData.isAdmin === true)){
       window._uData = uData;
       hidePendingScreen();
+      // appScreen সবসময় দেখাও
+      var appScreen = document.getElementById('appScreen');
+      var authScreen = document.getElementById('authScreen');
+      if(appScreen) appScreen.style.display = 'block';
+      if(authScreen) authScreen.style.display = 'none';
       if(window.initApp) window.initApp();
+      toast('✅ অ্যাপ্রুভ হয়েছে! স্বাগতম!','ok');
     } else {
       // Show email in pending screen
       var emailEl = document.getElementById('pendingEmail');
-      if(emailEl) emailEl.textContent = uData?.email || window._uEmail || '';
+      if(emailEl) emailEl.textContent = (uData && uData.email) || window._uEmail || '';
       // Flash effect to indicate check was done
       var btn = event && event.target;
       if(btn){ var orig=btn.textContent; btn.textContent='⏳ চেক করা হলো...'; setTimeout(()=>{btn.textContent=orig;},1500); }
@@ -1541,10 +1550,13 @@ async function checkApprovalStatus(){
   if(!window._uid){ return; }
   try{
     var uData = await window._getUser(window._uid);
-    if(uData && uData.approved===true){
+    if(uData && (uData.approved===true || uData.isAdmin===true)){
       window._uData = uData;
       hidePendingScreen();
-      document.getElementById('appScreen').style.display='block';
+      var appScreen = document.getElementById('appScreen');
+      var authScreen = document.getElementById('authScreen');
+      if(appScreen) appScreen.style.display = 'block';
+      if(authScreen) authScreen.style.display = 'none';
       if(window.initApp) window.initApp();
       toast('✅ অ্যাপ্রুভ হয়েছে! স্বাগতম!','ok');
     } else {
