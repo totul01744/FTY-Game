@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>FYP King 👑</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23FF2D55'/><stop offset='100%25' stop-color='%23FF9500'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g1)'/><text x='50' y='72' font-size='62' text-anchor='middle'>%F0%9F%91%91</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23FF2D55'/><stop offset='100%25' stop-color='%23FF9500'/></linearGradient></defs><rect width='100' height='100' rx='22' fill='url(%23g1)'/><text x='50' y='72' font-size='62' text-anchor='middle'>%F0%9F%91%91</text></svg>">
+<meta name="theme-color" content="#FF2D55">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FYP King">
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@400;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- ╔══════════════════════════════════════════════════╗
@@ -107,34 +114,22 @@ async function fsUpdate(col,id,data){
 }
 
 /* ── Go to app ── */
+var _appInitDone = false;
 function goApp(uData){
   window._uData=uData;
   var a=document.getElementById('authScreen');
   var b=document.getElementById('appScreen');
-  // আগে auth screen লুকাও
   if(a) a.style.display='none';
 
-  // Admin সবসময় access পাবে
-  if(uData && uData.isAdmin===true){
-    if(b) b.style.display='block';
+  if(uData && (uData.isAdmin===true || uData.approved===true)){
     hidePendingScreen();
-    if(typeof unload==='function') unload();
-    if(window.initApp) window.initApp();
+    if(b) b.style.display='block';
+    if(!_appInitDone){ _appInitDone=true; if(window.initApp) window.initApp(); }
     return;
   }
 
-  // Firestore থেকে approved===true হলেই app দেখাও
-  if(uData && uData.approved===true){
-    if(b) b.style.display='block';
-    hidePendingScreen();
-    if(typeof unload==='function') unload();
-    if(window.initApp) window.initApp();
-    return;
-  }
-
-  // approved নয় — appScreen লুকাও, pending screen দেখাও
+  // approved নয় — pending screen দেখাও
   if(b) b.style.display='none';
-  if(typeof unload==='function') unload();
   showPendingScreen();
 }
 function showPendingScreen(){
@@ -886,6 +881,27 @@ async function sendSupportMsg(){
 .cdown-lbl{font-size:11px;color:var(--muted);}
 .cdown-val{font-family:var(--fd);font-size:26px;font-weight:800;color:var(--gold);}
 </style>
+<script>
+// PWA Manifest inline
+const manifest = {
+  name: "FYP King 👑",
+  short_name: "FYP King",
+  description: "TikTok চ্যালেঞ্জ ও স্ক্রিপ্ট অ্যাপ",
+  start_url: "./",
+  display: "standalone",
+  background_color: "#05050E",
+  theme_color: "#FF2D55",
+  icons: [
+    { src: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23FF2D55'/><text x='50' y='72' font-size='62' text-anchor='middle'>👑</text></svg>", sizes: "192x192", type: "image/svg+xml" }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(blob);
+const linkEl = document.createElement('link');
+linkEl.rel = 'manifest';
+linkEl.href = manifestURL;
+document.head.appendChild(linkEl);
+</script>
 </head>
 <body>
 
@@ -1047,7 +1063,7 @@ async function sendSupportMsg(){
     <div class="quick-wrap">
       <div class="sec-t">🚀 দ্রুত অ্যাক্সেস</div>
       <div class="quick-grid">
-        <div class="qi" onclick="window.open('https://fyp-script.vercel.app/','_blank')"  >
+        <div class="qi" onclick="window.open('https://fyp-script.vercel.app/','_blank')">
           <span class="qi-ic">🤖</span>
           <div class="qi-t">স্ক্রিপ্ট তৈরি</div>
           <div class="qi-d">৮ ধরনের বাংলা স্ক্রিপ্ট</div>
@@ -1306,7 +1322,7 @@ async function sendSupportMsg(){
       </div>
     </div>
     <!-- Check button -->
-    <button onclick="checkApproval()" style="width:100%;padding:13px;background:linear-gradient(135deg,#FF2D55,#FF9500);color:#fff;border:none;border-radius:12px;font-family:var(--fd);font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;">🔄 আবার চেক করো</button>
+    <button onclick="checkApproval(this)" style="width:100%;padding:13px;background:linear-gradient(135deg,#FF2D55,#FF9500);color:#fff;border:none;border-radius:12px;font-family:var(--fd);font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;">🔄 আবার চেক করো</button>
     <!-- Logout -->
     <div style="display:flex;gap:10px;margin-top:12px;justify-content:center;"><button onclick="checkApprovalStatus()" style="padding:10px 20px;background:linear-gradient(135deg,#00c864,#00a050);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">🔄 চেক করো</button><button onclick="window._logout&&window._logout()" style="padding:10px 20px;background:rgba(255,255,255,0.08);color:var(--muted);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">🔙 লগআউট</button></div>
   </div>
@@ -1514,50 +1530,54 @@ async function sendSupportPageMsg(){
   } catch(e){ unload(); toast('❌ সমস্যা হয়েছে','er'); }
 }
 
-async function checkApproval(){
+async function checkApproval(btnEl){
   var uid = window._uid || (window._uData && window._uData.uid);
   if(!uid) return;
+  // বাটন disable করো যাতে বারবার click না হয়
+  if(btnEl){ btnEl.disabled=true; btnEl.textContent='⏳ চেক হচ্ছে...'; }
   try{
     var uData = await window._getUser(uid);
-    if(uData && (uData.approved === true || uData.isAdmin === true)){
+    if(uData && (uData.approved===true || uData.isAdmin===true)){
       window._uData = uData;
       hidePendingScreen();
-      // appScreen সবসময় দেখাও
-      var appScreen = document.getElementById('appScreen');
-      var authScreen = document.getElementById('authScreen');
-      if(appScreen) appScreen.style.display = 'block';
-      if(authScreen) authScreen.style.display = 'none';
-      if(window.initApp) window.initApp();
-      toast('✅ অ্যাপ্রুভ হয়েছে! স্বাগতম!','ok');
+      var b = document.getElementById('appScreen');
+      var a = document.getElementById('authScreen');
+      if(a) a.style.display='none';
+      if(b) b.style.display='block';
+      if(!_appInitDone){ _appInitDone=true; if(window.initApp) window.initApp(); }
     } else {
-      // Show email in pending screen
       var emailEl = document.getElementById('pendingEmail');
-      if(emailEl) emailEl.textContent = (uData && uData.email) || window._uEmail || '';
-      // Flash effect to indicate check was done
-      var btn = event && event.target;
-      if(btn){ var orig=btn.textContent; btn.textContent='⏳ চেক করা হলো...'; setTimeout(()=>{btn.textContent=orig;},1500); }
+      if(emailEl) emailEl.textContent = (uData&&uData.email)||window._uEmail||'';
+      if(btnEl){ btnEl.disabled=false; btnEl.textContent='🔄 আবার চেক করো'; }
     }
-  }catch(e){ console.warn(e); }
+  }catch(e){
+    console.warn(e);
+    if(btnEl){ btnEl.disabled=false; btnEl.textContent='🔄 আবার চেক করো'; }
+  }
 }
 
-// Auto check every 30 seconds when pending screen is visible
-setInterval(async function(){
+// Auto check every 15 seconds when pending screen is visible
+var _autoCheckInterval = setInterval(async function(){
   var ps = document.getElementById('pendingScreen');
-  if(ps && ps.style.display !== 'none'){ await checkApproval(); }
-}, 30000);
+  if(ps && ps.style.display !== 'none'){
+    await checkApprovalStatus();
+  } else if(ps && ps.style.display === 'none'){
+    clearInterval(_autoCheckInterval); // approved হলে বন্ধ করো
+  }
+}, 15000);
 
 async function checkApprovalStatus(){
   if(!window._uid){ return; }
   try{
     var uData = await window._getUser(window._uid);
-    if(uData && (uData.approved===true || uData.isAdmin===true)){
+    if(uData && (uData.approved===true||uData.isAdmin===true)){
       window._uData = uData;
       hidePendingScreen();
-      var appScreen = document.getElementById('appScreen');
-      var authScreen = document.getElementById('authScreen');
-      if(appScreen) appScreen.style.display = 'block';
-      if(authScreen) authScreen.style.display = 'none';
-      if(window.initApp) window.initApp();
+      var b=document.getElementById('appScreen');
+      var a=document.getElementById('authScreen');
+      if(a) a.style.display='none';
+      if(b) b.style.display='block';
+      if(!_appInitDone){ _appInitDone=true; if(window.initApp) window.initApp(); }
       toast('✅ অ্যাপ্রুভ হয়েছে! স্বাগতম!','ok');
     } else {
       toast('⏳ এখনো অ্যাপ্রুভ হয়নি। অপেক্ষা করো।','er');
