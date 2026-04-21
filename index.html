@@ -109,22 +109,30 @@ async function fsUpdate(col,id,data){
 /* ── Go to app ── */
 function goApp(uData){
   window._uData=uData;
-  var a=document.getElementById('authScreen'),b=document.getElementById('appScreen');
+  var a=document.getElementById('authScreen');
+  var b=document.getElementById('appScreen');
+  // আগে auth screen লুকাও
   if(a) a.style.display='none';
-  if(b) b.style.display='block';
+
   // Admin সবসময় access পাবে
-  if(uData && uData.isAdmin){ 
-    hidePendingScreen(); 
-    if(window.initApp) window.initApp(); 
-    return; 
-  }
-  // approved না হলে pending screen দেখাও
-  if(uData && uData.approved === false){
-    showPendingScreen();
+  if(uData && uData.isAdmin===true){
+    if(b) b.style.display='block';
+    hidePendingScreen();
+    if(window.initApp) window.initApp();
     return;
   }
-  hidePendingScreen();
-  if(window.initApp) window.initApp();
+
+  // Firestore থেকে approved===true হলেই app দেখাও
+  if(uData && uData.approved===true){
+    if(b) b.style.display='block';
+    hidePendingScreen();
+    if(window.initApp) window.initApp();
+    return;
+  }
+
+  // approved নয় — appScreen লুকাও, pending screen দেখাও
+  if(b) b.style.display='none';
+  showPendingScreen();
 }
 function showPendingScreen(){
   var ps = document.getElementById('pendingScreen');
@@ -150,12 +158,20 @@ window._isAdmin = function(uid){ return uid===AUID; };
 window._login = async function(email,pass){
   var d = await authReq('signInWithPassword',{email:email,password:pass,returnSecureToken:true});
   saveTok(d.idToken,d.localId,d.email,d.expiresIn);
+  // সবসময় Firestore থেকে fresh approved status নাও
   var uData = await window._getUser(d.localId);
   if(!uData){
     uData={uid:d.localId,email:d.email,name:'',username:'',bio:'',gender:'male',
            followers:0,views:0,streak:0,completed:0,unlockedTiers:'free',
-           pic:'',isAdmin:d.localId===AUID,createdAt:new Date().toISOString()};
+           pic:'',isAdmin:d.localId===AUID,approved:false,
+           createdAt:new Date().toISOString()};
     await window._saveUser(d.localId,uData);
+  } else if(d.localId===AUID){
+    uData.isAdmin=true; uData.approved=true;
+  }
+  // approved field না থাকলে false ধরো
+  if(uData.isAdmin!==true && uData.approved!==true){
+    uData.approved=false;
   }
   goApp(uData);
   return {user:{uid:d.localId,email:d.email}};
@@ -242,13 +258,21 @@ window.addEventListener('DOMContentLoaded', async function(){
     window._uid    = tok.uid;
     window._uEmail = tok.email;
     try{
+      // Firestore থেকে FRESH approved status নাও — cache নয়
       var uData=await window._getUser(tok.uid);
-      if(uData){ 
-        // Fresh data নিয়ে goApp করো (approval status check করতে)
+      if(uData){
+        if(tok.uid===AUID){ uData.isAdmin=true; uData.approved=true; }
+        // approved field না থাকলে false
+        if(uData.isAdmin!==true && uData.approved!==true){ uData.approved=false; }
         goApp(uData);
+      } else {
+        clearTok(); goAuth();
       }
-      else{ goAuth(); }
-    }catch(e){ goAuth(); }
+    }catch(e){
+      // Network error হলে logout — cache দিয়ে bypass করা যাবে না
+      console.warn('DOMContentLoaded error:', e);
+      clearTok(); goAuth();
+    }
   } else {
     goAuth();
   }
@@ -1281,7 +1305,7 @@ async function sendSupportMsg(){
     <!-- Check button -->
     <button onclick="checkApproval()" style="width:100%;padding:13px;background:linear-gradient(135deg,#FF2D55,#FF9500);color:#fff;border:none;border-radius:12px;font-family:var(--fd);font-size:14px;font-weight:800;cursor:pointer;margin-bottom:10px;">🔄 আবার চেক করো</button>
     <!-- Logout -->
-    <button onclick="window._logout&&window._logout();goAuth();" style="width:100%;padding:10px;background:transparent;color:rgba(255,255,255,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:12px;font-size:13px;cursor:pointer;">← লগআউট করো</button>
+    <div style="display:flex;gap:10px;margin-top:12px;justify-content:center;"><button onclick="checkApprovalStatus()" style="padding:10px 20px;background:linear-gradient(135deg,#00c864,#00a050);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">🔄 চেক করো</button><button onclick="window._logout&&window._logout()" style="padding:10px 20px;background:rgba(255,255,255,0.08);color:var(--muted);border:1px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;">🔙 লগআউট</button></div>
   </div>
 </div>
 <style>
@@ -1512,6 +1536,24 @@ setInterval(async function(){
   var ps = document.getElementById('pendingScreen');
   if(ps && ps.style.display !== 'none'){ await checkApproval(); }
 }, 30000);
+
+async function checkApprovalStatus(){
+  if(!window._uid){ return; }
+  try{
+    var uData = await window._getUser(window._uid);
+    if(uData && uData.approved===true){
+      window._uData = uData;
+      hidePendingScreen();
+      document.getElementById('appScreen').style.display='block';
+      if(window.initApp) window.initApp();
+      toast('✅ অ্যাপ্রুভ হয়েছে! স্বাগতম!','ok');
+    } else {
+      toast('⏳ এখনো অ্যাপ্রুভ হয়নি। অপেক্ষা করো।','er');
+    }
+  }catch(e){
+    toast('❌ চেক করতে পারিনি','er');
+  }
+}
 
 window.initApp = async () => {
   loadEarningLinks();
